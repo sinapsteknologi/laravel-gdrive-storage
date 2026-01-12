@@ -16,6 +16,7 @@ class GDriveStorageServiceProvider extends ServiceProvider
         );
 
         $this->app->singleton(
+            Contracts\GDriveServiceContract::class,
             Services\GDriveService::class
         );
     }
@@ -27,9 +28,7 @@ class GDriveStorageServiceProvider extends ServiceProvider
         ], 'gdrive-storage-config');
 
         Storage::extend('gdrive', function ($app, $config) {
-            return new Filesystems\GDriveFilesystem(
-                $app->make(Services\GDriveService::class)
-            );
+            return $app->make(Filesystems\GDriveFilesystem::class);
         });
 
         if (config('gdrive-storage.routes.enabled', true)) {
@@ -44,4 +43,3 @@ class GDriveStorageServiceProvider extends ServiceProvider
         }
     }
 }
-
