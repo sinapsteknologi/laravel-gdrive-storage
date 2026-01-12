@@ -10,6 +10,11 @@ Unlike Flysystem adapters, this package is designed for
 Laravel-first usage with signed temporary URLs, Shared Drive support,
 and minimal refactoring from existing Storage-based code.
 
+## Requirements
+
+- PHP >= 8.1
+- Laravel >= 10
+- Google Drive API enabled
 
 ## Installation
 
@@ -49,12 +54,19 @@ This package uses **Google Service Account authentication**, not OAuth user logi
 service-account.json
 ```
 
+### Security Notes
+
+- Never commit `service-account.json` to version control
+- Store credentials outside the public directory
+- Rotate service account keys periodically
+
 ---
 
 ### 2. Share Target Google Drive Folder
 
 This package **does not operate on the root Drive**.
-You must use a **specific folder**.
+You must use a **specific folder**. This folder may exist in **My Drive or a Shared Drive**.
+
 
 1. Open Google Drive
 2. Create a folder (example: `Laravel Storage`)
@@ -98,7 +110,12 @@ config/gdrive-storage.php
 
 ### 5. Configure Environment Variables
 
-By default, the package looks for the service account file at: ```storage/app/google/service-account.json```, if you want to use other location, please add the path information to your `.env` file.
+By default, the package looks for the service account file at:
+
+`storage/app/google/service-account.json`
+
+If you want to use a different location, specify the path in your `.env` file.
+
 
 Example:
 
@@ -155,7 +172,10 @@ $url = Storage::disk('gdrive')->temporaryUrl(
 );
 ```
 
-The generated URL is signed and expires automatically.
+The generated URL is signed and expires automatically. 
+The URL points to a signed Laravel route and will return a streamed response
+from Google Drive when accessed.
+
 
 ---
 ## Available Filesystem Methods
