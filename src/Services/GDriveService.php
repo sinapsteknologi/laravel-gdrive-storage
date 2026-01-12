@@ -7,8 +7,9 @@ use Google\Service\Drive;
 use Google\Service\Drive\DriveFile;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\URL;
+use SinapsTeknologi\GDriveStorage\Contracts\GDriveServiceContract;
 
-class GDriveService
+class GDriveService implements GDriveServiceContract
 {
     protected Drive $drive;
 
