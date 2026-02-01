@@ -137,6 +137,30 @@ class GDriveService implements GDriveServiceContract
         return $parentId;
     }
 
+    protected function requireFile(string $path): array
+    {
+        $resolved = $this->resolvePath($path);
+
+        if (! $resolved || $resolved['type'] !== 'file') {
+            throw new \RuntimeException("File not found: {$path}");
+        }
+
+        return $resolved;
+    }
+
+    protected function requireFolder(string $path): array
+    {
+        $resolved = $this->resolvePath($path);
+
+        if (! $resolved || $resolved['type'] !== 'folder') {
+            throw new \RuntimeException("Folder not found: {$path}");
+        }
+
+        return $resolved;
+    }
+
+
+
     /* =========================================================
      |  STORAGE-LIKE METHODS
      ========================================================= */
@@ -199,9 +223,9 @@ class GDriveService implements GDriveServiceContract
 
     public function size(string $path): int
     {
-        [$fileId] = $this->resolvePath($path);
+        $resolved = $this->requireFile($path);
 
-        $file = $this->drive->files->get($fileId, [
+        $file = $this->drive->files->get($resolved['id'], [
             'fields' => 'size',
             'supportsAllDrives' => true,
         ]);
@@ -230,7 +254,11 @@ class GDriveService implements GDriveServiceContract
             'fields' => 'files(name)',
         ]);
 
-        return collect($result->files)->pluck('name')->all();
+        return collect($result->files)
+            ->map(fn ($file) =>
+                ltrim($path . '/' . $file->name, '/')
+            )
+            ->all();
     }
 
     public function directories(string $path = ''): array
@@ -274,12 +302,14 @@ class GDriveService implements GDriveServiceContract
 
     public function copy(string $from, string $to): bool
     {
-        $resolved = $this->resolvePath($from);
+        $resolved = $this->requireFile($from);
+
         if (! $resolved) {
             return false;
         }
 
-        [$sourceFileId] = $resolved;
+        $sourceFileId = $resolved['id'];
+
 
         $segments = explode('/', trim($to, '/'));
         $filename = array_pop($segments);
@@ -299,12 +329,12 @@ class GDriveService implements GDriveServiceContract
 
     public function move(string $from, string $to): bool
     {
-        $resolved = $this->resolvePath($from);
+        $resolved = $this->requireFile($from);
         if (! $resolved) {
             return false;
         }
 
-        [$fileId] = $resolved;
+        $fileId = $resolved['id'];
 
         $segments = explode('/', trim($to, '/'));
         $filename = array_pop($segments);
@@ -364,7 +394,8 @@ class GDriveService implements GDriveServiceContract
 
     public function readStream(string $path)
     {
-        [$fileId] = $this->resolvePath($path);
+        $resolved = $this->requireFile($path);
+        $fileId = $resolved['id'];
 
         $response = $this->drive->files->get($fileId, [
             'alt' => 'media',
@@ -395,7 +426,11 @@ class GDriveService implements GDriveServiceContract
             return true;
         }
 
-        [$folderId] = $resolved;
+        if ($resolved['type'] !== 'folder') {
+            return false;
+        }
+
+        $folderId = $resolved['id'];
 
         $this->deleteRecursively($folderId);
 
@@ -451,7 +486,8 @@ class GDriveService implements GDriveServiceContract
 
     public function lastModified(string $path): int
     {
-        [$fileId] = $this->resolvePath($path);
+        $resolved = $this->requireFile($path);
+        $fileId = $resolved['id'];
 
         $file = $this->drive->files->get($fileId, [
             'fields' => 'modifiedTime',
@@ -463,7 +499,8 @@ class GDriveService implements GDriveServiceContract
 
     public function mimeType(string $path): string
     {
-        [$fileId] = $this->resolvePath($path);
+        $resolved = $this->requireFile($path);
+        $fileId = $resolved['id'];
 
         $file = $this->drive->files->get($fileId, [
             'fields' => 'mimeType',

@@ -9,28 +9,18 @@ class DownloadController
 {
     public function download(Request $request, GDriveService $drive)
     {
-        if (! $request->hasValidSignature()) {
-            abort(403);
+        $path = base64_decode($request->query('path'));
+        $requestedName = $request->query('name');
+
+        if ($requestedName) {
+            $ext = pathinfo($path, PATHINFO_EXTENSION);
+
+            if ($ext && ! str_ends_with($requestedName, '.'.$ext)) {
+                $requestedName .= '.'.$ext;
+            }
         }
 
-        $encoded = $request->query('path');
-
-        if (! $encoded) {
-            abort(404);
-        }
-
-        $path = base64_decode($encoded, true);
-
-        if ($path === false || trim($path) === '') {
-            abort(404);
-        }
-
-        $name = $request->query('name') ?? basename($path);
-
-        // sanitize filename
-        $name = preg_replace('/[^A-Za-z0-9._-]/', '_', $name);
-
-        return $drive->download($path, $name);
+        return $drive->download($path, $requestedName);
     }
 }
 

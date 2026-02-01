@@ -17,26 +17,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Recursive directory creation and deletion
 * Streamed file downloads
 
-### Changed
-
-* N/A
-
-### Deprecated
-
-* N/A
-
-### Removed
-
-* N/A
+[1.0.1] - 2026-02-02
 
 ### Fixed
 
-* N/A
+* Fixed missing file extension when using Storage::download() with Google Drive disk.
+* Ensured downloaded filenames always retain their original extension when a custom name is provided.
+* Prevented invalid filenames when the custom download name already includes an extension.
 
-### Security
+### Changed
+* Centralized filename normalization logic inside the package download controller.
+* Improved internal consistency between download(), temporaryUrl(), and direct filesystem access.
 
-* N/A
+### Internal
+* Refactored file resolution to consistently use requireFile() where a file is mandatory.
+* Reduced ambiguity between folder and file resolution during download and size retrieval.
 
+[1.0.1]: https://github.com/sinapsteknologi/laravel-gdrive-storage/releases/tag/v1.0.1
 ---
 
 ## [1.0.0] - 2026-01-12
